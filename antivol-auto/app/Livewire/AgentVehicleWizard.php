@@ -10,6 +10,7 @@ use App\Models\Vehicle;
 use App\Models\Marking;
 use App\Models\Document;
 use App\Services\MarkingService;
+use App\Services\AuditService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -136,6 +137,12 @@ class AgentVehicleWizard extends Component
             ->saveDocument(->id, 'photo_vehicle', ->photo_vehicle);
             ->saveDocument(->id, 'photo_mirror', ->photo_mirror);
             ->saveDocument(->id, 'id_card', ->photo_id);
+
+            // 5. Audit Log
+            AuditService::log('register_vehicle', 'Vehicle', ->id, [
+                'plate' => ->plate_number,
+                'code' => 
+            ]);
 
             ->generated_code = ;
             ->qr_path = ;
