@@ -38,6 +38,21 @@ Param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$LogFilePath = $null
+
+function Write-Log($message) {
+    try {
+        $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        $line = "[$timestamp] $message"
+        if ($null -ne $LogFilePath) {
+            Add-Content -Path $LogFilePath -Value $line -ErrorAction SilentlyContinue
+        } else {
+            Add-Content -Path $LogFile -Value $line -ErrorAction SilentlyContinue
+        }
+    } catch {
+        # ignore logging failures
+    }
+}
 
 Write-Host "== Setup dev BRNY (Laragon) - début ==" -ForegroundColor Cyan
 Write-Log "== Setup dev BRNY (Laragon) - début =="
@@ -71,6 +86,8 @@ if ($PSScriptRoot) {
 } else {
     Push-Location (Split-Path -Path $MyInvocation.MyCommand.Definition -Parent)
 }
+
+$LogDir = "logs"
 
 # Prepare log directory and file path
 try {
@@ -116,20 +133,6 @@ function Log-Verbose($message) {
     if ($Verbose) { Write-Host "[VERBOSE] $message" -ForegroundColor DarkGray }
 }
 
-function Write-Log($message) {
-    try {
-        $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-        $line = "[$timestamp] $message"
-        if ($null -ne $LogFilePath) {
-            Add-Content -Path $LogFilePath -Value $line -ErrorAction SilentlyContinue
-        } else {
-            Add-Content -Path $LogFile -Value $line -ErrorAction SilentlyContinue
-        }
-    } catch {
-        # ignore logging failures
-    }
-}
-
 # Compare semantic versions (returns -1 if current<required, 0 if equal, 1 if current>required)
 function Compare-SemVer([string]$current, [string]$required) {
     $curParts = ($current -split '[^0-9]+' ) | Where-Object { $_ -ne '' } | ForEach-Object { [int]$_ }
@@ -145,9 +148,9 @@ function Compare-SemVer([string]$current, [string]$required) {
 }
 
 # Try to extract a semver-like version from a command output using common patterns
-function Get-CommandVersion([string]$exe, [string]$args = '--version') {
+function Get-CommandVersion([string]$exe, [string]$cmdArgs = '--version') {
     try {
-        $out = & $exe $args 2>&1
+        $out = & $exe $cmdArgs 2>&1
         if ($out -is [array]) { $out = $out -join "`n" }
         if ($out -match '([0-9]+(\.[0-9]+){1,})') { return $matches[1] }
         return $null
@@ -182,77 +185,6 @@ function Check-ToolVersion([string]$exe, [string]$name, [string]$requiredVersion
     }
 }
 
-# Execute a shell command or just print it when DryRun is set
-function Invoke-Step([string]$cmd, [string]$message = $null) {
-    if ($message) { Log-Verbose($message); Write-Log($message) }
-    if ($DryRun) {
-        Write-Host "[DRYRUN] $cmd" -ForegroundColor Yellow
-        Write-Log("[DRYRUN] " + $cmd)
-    } else {
-        try {
-            Log-Verbose("Executing: $cmd")
-            Invoke-Expression $cmd
-        } catch {
-            Write-Host "Erreur lors de l'exécution de: $cmd" -ForegroundColor Red
-            Write-Log("Error executing: $cmd - " + $_.Exception.Message)
-            throw
-        }
-    }
-}
-
-# Dry-run summary: when -DryRun is set, display a human-friendly plan of steps
-if ($DryRun -or $SummaryOnly) {
-    $PlannedSteps = @()
-    if (-not $SkipComposer) { $PlannedSteps += 'Composer install (composer install --no-interaction --prefer-dist)' }
-    $PlannedSteps += 'Install spatie/laravel-permission if missing (composer require spatie/laravel-permission)'
-    $PlannedSteps += 'Vendor publish for Spatie (config + migrations) if needed (php artisan vendor:publish ...)'
-    $PlannedSteps += 'Run migrations (php artisan migrate --force)'
-    $PlannedSteps += 'Create storage symlink (php artisan storage:link)'
-    $PlannedSteps += 'Seed roles, users and test data (RolePermissionSeeder, UserSeeder, TestDataSeeder)'
-    if ($RunFactoryData) { $PlannedSteps += 'Seed factory bulk data (FactoryDataSeeder) (flag -RunFactoryData)' }
-    if (-not $SkipNpm) { $PlannedSteps += 'NPM install and build assets (npm install && npm run dev) (if npm available)' }
-
-    $title = ($SummaryOnly) ? 'SummaryOnly: plan (will exit after displaying)' : 'Dry-Run Summary: planned steps'
-    Write-Host "`n== $title ==" -ForegroundColor Yellow
-    Write-Log $title
-    for ($i = 0; $i -lt $PlannedSteps.Count; $i++) {
-        $num = $i + 1
-        $item = $PlannedSteps[$i]
-        Write-Host "[$num] $item"
-        Write-Log ("DRYRUN PLAN $num: " + $item)
-    }
-    if ($DryRun) { Write-Host "`nNote: Dry-Run enabled — commands are shown but NOT executed." -ForegroundColor Yellow; Write-Log 'DryRun mode - no commands executed' }
-    if ($SummaryOnly) {
-        Write-Host "`nSummaryOnly flag present — sortie immédiate sans exécution." -ForegroundColor Yellow
-        Write-Log 'SummaryOnly - exiting after printing plan'
-        Pop-Location
-        exit 0
-    }
-}
-
-# Vérifications préalables
-
-$phpOk = (Get-Command php -ErrorAction SilentlyContinue) -ne $null
-$composerOk = (Get-Command composer -ErrorAction SilentlyContinue) -ne $null
-$npmOk = (Get-Command npm -ErrorAction SilentlyContinue) -ne $null
-
-if (-not $phpOk) { Write-Host "PHP non trouvé. Veuillez installer PHP (Laragon fournit PHP)." -ForegroundColor Red; if ($FailOnPrereqs) { exit 1 } }
-if (-not $composerOk) { Write-Host "Composer non trouvé. Installer Composer ou utilisez Laragon Shell." -ForegroundColor Red; if ($FailOnPrereqs) { exit 1 } }
-if (-not $npmOk) { Write-Host "npm non trouvé. Installer Node.js." -ForegroundColor Yellow }
-
-Log-Verbose("php: " + (Get-Command php).Source)
-if ($composerOk) { Log-Verbose("composer: " + (Get-Command composer).Source) }
-if ($npmOk) { Log-Verbose("npm: " + (Get-Command npm).Source) }
-Write-Log ("Checks: phpOk=" + $phpOk + ", composerOk=" + $composerOk + ", npmOk=" + $npmOk)
-
-# Version checks (recommandations définies dans README)
-$allOk = $true
-$allOk = $allOk -and (Check-ToolVersion 'php' 'PHP' '8.2')
-$allOk = $allOk -and (Check-ToolVersion 'composer' 'Composer' '2.5')
-$allOk = $allOk -and (Check-ToolVersion 'node' 'Node.js' '18.16')
-$allOk = $allOk -and (Check-ToolVersion 'npm' 'npm' '8.19')
-$allOk = $allOk -and (Check-ToolVersion 'git' 'Git' '2.40.1')
-
 # More complete Laragon detection
 function Get-LaragonRoot {
     # Check common environment variables
@@ -263,8 +195,8 @@ function Get-LaragonRoot {
     $candidates = @(
         'C:\laragon',
         'C:\Program Files\Laragon',
-        Join-Path $env:LOCALAPPDATA 'Programs\Laragon',
-        Join-Path $env:ProgramFiles 'Laragon'
+        (Join-Path $env:LOCALAPPDATA 'Programs\Laragon'),
+        (Join-Path $env:ProgramFiles 'Laragon')
     )
     foreach ($p in $candidates) {
         if ($p -and (Test-Path $p)) { return $p }
@@ -336,15 +268,60 @@ function Check-Laragon {
             Write-Log 'DryRun/SummaryOnly - skipping writing laragon root files'
         }
 
-        # Check bundled PHP if present
-        $phpDirs = Get-ChildItem -Path (Join-Path $root 'bin') -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'php' }
-        if ($phpDirs -and $phpDirs.Count -gt 0) {
-            foreach ($d in $phpDirs) {
-                $phpExe = Join-Path $d.FullName 'php.exe'
-                if (Test-Path $phpExe) {
-                    $pver = Get-CommandVersion $phpExe '--version'
-                    if ($pver) { Write-Host "PHP bundled avec Laragon: $($d.Name) (version $pver)" -ForegroundColor Green; Write-Log ("Laragon PHP: " + $d.Name + " v" + $pver); break }
-                }
+        # Check bundled PHP
+        $phpBase = Join-Path $root 'bin\php'
+        Write-Host "Checking PHP in $phpBase"
+        if (Test-Path $phpBase) {
+             $phpVersions = Get-ChildItem -Path $phpBase -Directory | Sort-Object Name -Descending
+             foreach ($v in $phpVersions) {
+                 Write-Host "Checking version: $($v.FullName)"
+                 $phpExe = Join-Path $v.FullName 'php.exe'
+                 if (Test-Path $phpExe) {
+                     $pver = Get-CommandVersion $phpExe '--version'
+                     if ($pver) { 
+                        Write-Host "PHP bundled avec Laragon: $($v.Name) (version $pver)" -ForegroundColor Green
+                        Write-Log ("Laragon PHP: " + $v.Name + " v" + $pver)
+                        
+                        # Add PHP to PATH for this session
+                        $phpBin = $v.FullName
+                        if ($env:Path -notlike "*$phpBin*") {
+                            $env:Path = "$phpBin;" + $env:Path
+                            Write-Host "Ajout de PHP au PATH: $phpBin" -ForegroundColor Cyan
+                            Write-Log "Added PHP to PATH: $phpBin"
+                        }
+                        break 
+                     }
+                 }
+             }
+        }
+
+        # Check bundled Composer
+        $composerDir = Join-Path $root 'bin\composer'
+        if (Test-Path $composerDir) {
+            if ($env:Path -notlike "*$composerDir*") {
+                $env:Path = "$composerDir;" + $env:Path
+                Write-Host "Ajout de Composer au PATH: $composerDir" -ForegroundColor Cyan
+                Write-Log "Added Composer to PATH: $composerDir"
+            }
+        }
+
+        # Check bundled Node.js (if not already found in path)
+        if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+            $nodeBase = Join-Path $root 'bin\nodejs'
+            if (Test-Path $nodeBase) {
+                 $nodeVersions = Get-ChildItem -Path $nodeBase -Directory | Sort-Object Name -Descending
+                 foreach ($v in $nodeVersions) {
+                     $nodeExe = Join-Path $v.FullName 'node.exe'
+                     if (Test-Path $nodeExe) {
+                        $nodeBin = $v.FullName
+                        if ($env:Path -notlike "*$nodeBin*") {
+                            $env:Path = "$nodeBin;" + $env:Path
+                            Write-Host "Ajout de Node.js au PATH: $nodeBin" -ForegroundColor Cyan
+                            Write-Log "Added Node.js to PATH: $nodeBin"
+                        }
+                        break
+                     }
+                 }
             }
         }
         return $true
@@ -358,6 +335,79 @@ function Check-Laragon {
 }
 
 if (Check-Laragon) { $laragonDetected = $true } else { $laragonDetected = $false }
+
+# Execute a shell command or just print it when DryRun is set
+function Invoke-Step([string]$cmd, [string]$message = $null) {
+    if ($message) { Log-Verbose($message); Write-Log($message) }
+    if ($DryRun) {
+        Write-Host "[DRYRUN] $cmd" -ForegroundColor Yellow
+        Write-Log("[DRYRUN] " + $cmd)
+    } else {
+        try {
+            Log-Verbose("Executing: $cmd")
+            Invoke-Expression $cmd
+        } catch {
+            Write-Host "Erreur lors de l'exécution de: $cmd" -ForegroundColor Red
+            Write-Log("Error executing: $cmd - " + $_.Exception.Message)
+            throw
+        }
+    }
+}
+
+# Dry-run summary: when -DryRun is set, display a human-friendly plan of steps
+if ($DryRun -or $SummaryOnly) {
+    $PlannedSteps = @()
+    if (-not $SkipComposer) { $PlannedSteps += 'Composer install (composer install --no-interaction --prefer-dist)' }
+    $PlannedSteps += 'Install spatie/laravel-permission if missing (composer require spatie/laravel-permission)'
+    $PlannedSteps += 'Vendor publish for Spatie (config + migrations) if needed (php artisan vendor:publish ...)'
+    $PlannedSteps += 'Run migrations (php artisan migrate --force)'
+    $PlannedSteps += 'Create storage symlink (php artisan storage:link)'
+    $PlannedSteps += 'Seed roles, users and test data (RolePermissionSeeder, UserSeeder, TestDataSeeder)'
+    if ($RunFactoryData) { $PlannedSteps += 'Seed factory bulk data (FactoryDataSeeder) (flag -RunFactoryData)' }
+    if (-not $SkipNpm) { $PlannedSteps += 'NPM install and build assets (npm install && npm run dev) (if npm available)' }
+
+    $title = ($SummaryOnly) ? 'SummaryOnly: plan (will exit after displaying)' : 'Dry-Run Summary: planned steps'
+    Write-Host "`n== $title ==" -ForegroundColor Yellow
+    Write-Log $title
+    for ($i = 0; $i -lt $PlannedSteps.Count; $i++) {
+        $num = $i + 1
+        $item = $PlannedSteps[$i]
+        Write-Host "[$num] $item"
+        Write-Log ("DRYRUN PLAN ${num}: " + $item)
+    }
+    if ($DryRun) { Write-Host "`nNote: Dry-Run enabled — commands are shown but NOT executed." -ForegroundColor Yellow; Write-Log 'DryRun mode - no commands executed' }
+    if ($SummaryOnly) {
+        Write-Host "`nSummaryOnly flag present — sortie immédiate sans exécution." -ForegroundColor Yellow
+        Write-Log 'SummaryOnly - exiting after printing plan'
+        Pop-Location
+        exit 0
+    }
+}
+
+# Vérifications préalables
+
+$phpOk = (Get-Command php -ErrorAction SilentlyContinue) -ne $null
+$composerOk = (Get-Command composer -ErrorAction SilentlyContinue) -ne $null
+$npmOk = (Get-Command npm -ErrorAction SilentlyContinue) -ne $null
+
+if (-not $phpOk) { Write-Host "PHP non trouvé. Veuillez installer PHP (Laragon fournit PHP)." -ForegroundColor Red; if ($FailOnPrereqs) { exit 1 } }
+if (-not $composerOk) { Write-Host "Composer non trouvé. Installer Composer ou utilisez Laragon Shell." -ForegroundColor Red; if ($FailOnPrereqs) { exit 1 } }
+if (-not $npmOk) { Write-Host "npm non trouvé. Installer Node.js." -ForegroundColor Yellow }
+
+Log-Verbose("php: " + (Get-Command php).Source)
+if ($composerOk) { Log-Verbose("composer: " + (Get-Command composer).Source) }
+if ($npmOk) { Log-Verbose("npm: " + (Get-Command npm).Source) }
+Write-Log ("Checks: phpOk=" + $phpOk + ", composerOk=" + $composerOk + ", npmOk=" + $npmOk)
+
+# Version checks (recommandations définies dans README)
+$allOk = $true
+$allOk = $allOk -and (Check-ToolVersion 'php' 'PHP' '8.2')
+$allOk = $allOk -and (Check-ToolVersion 'composer' 'Composer' '2.5')
+$allOk = $allOk -and (Check-ToolVersion 'node' 'Node.js' '18.16')
+$allOk = $allOk -and (Check-ToolVersion 'npm' 'npm' '8.19')
+$allOk = $allOk -and (Check-ToolVersion 'git' 'Git' '2.40.1')
+
+
 
 if (-not $allOk) {
     Write-Host "Certaines vérifications de versions ont échoué. Utilisez -FailOnPrereqs pour faire échouer le script en cas d'erreur." -ForegroundColor Yellow
