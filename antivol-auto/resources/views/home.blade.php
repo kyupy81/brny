@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -40,14 +40,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(\App\Models\TheftReport::with('registration.vehicle')->latest()->take(5)->get() as $theft)
-                    <tr class="border-b border-black">
-                        <td class="p-3 font-bold">{{ $theft->registration->vehicle->plate_number }}</td>
-                        <td class="p-3">{{ $theft->registration->vehicle->brand->name }} {{ $theft->registration->vehicle->model->name }}</td>
-                        <td class="p-3">{{ $theft->location }}</td>
-                        <td class="p-3">{{ $theft->reported_at->format('d/m/Y H:i') }}</td>
-                    </tr>
-                    @endforeach
+                    @forelse(\App\Models\TheftReport::with('registration.vehicle.brand', 'registration.vehicle.model')->latest()->take(5)->get() as $theft)
+                        @if($theft->registration && $theft->registration->vehicle)
+                        <tr class="border-b border-black">
+                            <td class="p-3 font-bold">{{ $theft->registration->vehicle->plate_number ?? 'N/A' }}</td>
+                            <td class="p-3">
+                                @if($theft->registration->vehicle->brand && $theft->registration->vehicle->model)
+                                    {{ $theft->registration->vehicle->brand->name }} {{ $theft->registration->vehicle->model->name }}
+                                @else
+                                    N/A
+                                @endif
+                            </td>
+                            <td class="p-3">{{ $theft->location ?? 'N/A' }}</td>
+                            <td class="p-3">{{ $theft->reported_at->format('d/m/Y H:i') }}</td>
+                        </tr>
+                        @endif
+                    @empty
+                        <tr class="border-b border-black">
+                            <td colspan="4" class="p-3 text-center text-gray-500">Aucun vol déclaré</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
             <div class="mt-4 text-right">
