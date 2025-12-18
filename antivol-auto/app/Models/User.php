@@ -1,17 +1,17 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
-    protected  = [
+    protected $fillable = [
         'name',
         'email',
         'phone',
@@ -21,43 +21,43 @@ class User extends Authenticatable
         'last_login_at',
     ];
 
-    protected  = [
+    protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    protected  = [
+    protected $casts = [
         'last_login_at' => 'datetime',
         'password' => 'hashed',
     ];
 
     public function client()
     {
-        return ->hasOne(Client::class);
+        return $this->hasOne(Client::class);
     }
 
     public function agent()
     {
-        return ->hasOne(Agent::class);
+        return $this->hasOne(Agent::class);
     }
 
     public function auditLogs()
     {
-        return ->hasMany(AuditLog::class);
+        return $this->hasMany(AuditLog::class);
     }
 
     public function isAdmin()
     {
-        return ->role === 'admin';
+        return $this->role === 'admin';
     }
 
     public function isAgent()
     {
-        return ->role === 'agent';
+        return $this->role === 'agent';
     }
 
     public function isClient()
     {
-        return ->role === 'client';
+        return $this->role === 'client';
     }
 }

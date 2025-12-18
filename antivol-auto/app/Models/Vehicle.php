@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
@@ -9,30 +9,20 @@ class Vehicle extends Model
 {
     use HasFactory;
 
-    protected  = [
-        'client_id',
-        'plate_number',
-        'make',
-        'model',
-        'color',
-        'type',
-        'year',
-        'vin',
-        'status',
-    ];
+    protected $fillable = ['plate_number', 'brand_id', 'model_id', 'manufacture_year', 'color', 'vin', 'mirror_engraving_code'];
 
-    public function client()
+    public function brand()
     {
-        return ->belongsTo(Client::class);
+        return $this->belongsTo(VehicleBrand::class);
     }
 
-    public function marking()
+    public function model()
     {
-        return ->hasOne(Marking::class);
+        return $this->belongsTo(VehicleModel::class);
     }
 
-    public function documents()
+    public function registrations()
     {
-        return ->hasMany(Document::class);
+        return $this->hasMany(Registration::class);
     }
 }

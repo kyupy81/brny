@@ -1,0 +1,112 @@
+﻿/* Design Tokens  BATELA RETROVISEUR NA YO (Dark) */
+/* Usage: import this file once at app root and reference variables. */
+
+:root {
+  /* Surfaces */
+  --bg-background: #0B0F14;
+  --bg-surface: #0F1620;
+  --bg-elevated: #141E2A;
+
+  /* Borders */
+  --border-card: #233041;
+  --border-divider: #1B2634;
+
+  /* Text */
+  --text-primary: #EAF0F7;
+  --text-secondary: #A9B4C2;
+  --text-muted: #7B8898;
+
+  /* Accent */
+  --accent: #4CC3FF;
+  --accent-hover: #2FB5FF;
+  --focus-ring: rgba(76,195,255,0.25);
+
+  /* Status */
+  --success: #39D98A;
+  --warning: #FFB020;
+  --danger: #FF5A6A;
+
+  /* Radius */
+  --radius-input: 12px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* Spacing scale */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+
+  /* Shadows */
+  --shadow-sm: 0 6px 16px rgba(0,0,0,0.25);
+  --shadow-md: 0 12px 30px rgba(0,0,0,0.35);
+  --shadow-lg: 0 18px 40px rgba(0,0,0,0.45);
+
+  /* Typography */
+  --font-sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --h1-size: 32px; --h1-line: 40px; --h1-weight: 800;
+  --h2-size: 20px; --h2-line: 28px; --h2-weight: 700;
+  --h3-size: 16px; --h3-line: 24px; --h3-weight: 700;
+  --body-size: 16px; --body-line: 24px; --body-weight: 500;
+  --caption-size: 12px; --caption-line: 16px; --caption-weight: 600;
+}
+
+/* Base (optional) */
+html, body { height: 100%; }
+body {
+  background: var(--bg-background);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--body-size);
+  line-height: var(--body-line);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1 { font-size: var(--h1-size); line-height: var(--h1-line); font-weight: var(--h1-weight); }
+h2 { font-size: var(--h2-size); line-height: var(--h2-line); font-weight: var(--h2-weight); }
+h3 { font-size: var(--h3-size); line-height: var(--h3-line); font-weight: var(--h3-weight); }
+
+/* Dividers & cards */
+.hr, .divider { height: 1px; background: var(--border-divider); }
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Buttons (minimal reference styles; adapt as needed) */
+.button { border-radius: var(--radius-pill); padding: 10px 16px; font-weight: 600; }
+.button--primary { background: var(--accent); color: var(--bg-background); }
+.button--secondary { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border-card); }
+.button--ghost { background: transparent; color: var(--text-secondary); }
+.button--danger { background: var(--danger); color: var(--bg-background); }
+.button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
+.button--primary:hover { background: var(--accent-hover); }
+
+/* Badges */
+.badge { border-radius: var(--radius-pill); padding: 4px 8px; font-size: 12px; font-weight: 600; }
+.badge--active { background: var(--success); color: var(--bg-background); }
+.badge--pending { background: var(--warning); color: var(--bg-background); }
+.badge--stolen { background: var(--danger); color: var(--bg-background); }
+
+/* Inputs */
+.input { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border-card); border-radius: var(--radius-input); padding: 10px 12px; }
+.input::placeholder { color: var(--text-muted); }
+.input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
+
+/* Utility tokens as classes (optional) */
+.bg-surface { background: var(--bg-surface); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* Motion */
+:root { --transition-fast: 150ms; --transition-medium: 200ms; --transition-slow: 250ms; }
+*[data-animated="true"] { transition: all var(--transition-medium) ease-out; }
+@media (prefers-reduced-motion: reduce) { *[data-animated="true"] { transition: none; } }
