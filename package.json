@@ -1,0 +1,29 @@
+{
+    "name": "brny",
+    "version": "1.0.0",
+    "description": "Dark, premium design tokens for the BATELA PWA (Agent/Admin). This handoff includes CSS variables, minimal base styles, and quick usage examples.",
+    "main": "tailwind.config.js",
+    "directories": {
+        "doc": "docs"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build:tokens": "style-dictionary build -c style-dictionary.config.json",
+        "clean:tokens": "powershell -Command \" Remove-Item -Recurse -Force dist/tokens -ErrorAction SilentlyContinue\\"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jonasmonga07-ui/brny.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/jonasmonga07-ui/brny/issues"
+    },
+    "homepage": "https://github.com/jonasmonga07-ui/brny#readme",
+    "devDependencies": {
+        "style-dictionary": "^5.1.1"
+    }
+}
