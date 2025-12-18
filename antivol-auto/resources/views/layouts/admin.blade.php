@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
@@ -12,7 +12,7 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
-            <!-- Design Tokens CSS (generated from Style Dictionary)
+            <!-- Design Tokens CSS (generated from Style Dictionary) -->
         <link rel="stylesheet" href="{{ asset('dist/tokens/tokens.css') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -45,7 +45,7 @@
                                 Analytique
                             </a>
                             <a href="{{ route('admin.operations') }}" class="{{ request()->routeIs('admin.operations') ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                                Opérations
+                                Op�rations
                             </a>
                             <a href="{{ route('admin.settings') }}" class="{{ request()->routeIs('admin.settings') ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
                                 Administration
