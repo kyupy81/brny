@@ -487,6 +487,8 @@ const createRegistration = async (token, data) => {
 
 ### PHP (Guzzle)
 
+**Note:** Guzzle doit être installé via Composer: `composer require guzzlehttp/guzzle`
+
 ```php
 use GuzzleHttp\Client;
 
@@ -515,4 +517,6 @@ $registrations = json_decode($response->getBody(), true);
 
 ## Contact & Support
 
-Pour toute question ou problème avec l'API, veuillez contacter l'équipe de développement ou ouvrir une issue sur le dépôt GitHub.
+Pour toute question ou problème avec l'API:
+- **GitHub Issues:** [https://github.com/kyupy81/brny/issues](https://github.com/kyupy81/brny/issues)
+- **Repository:** [https://github.com/kyupy81/brny](https://github.com/kyupy81/brny)
