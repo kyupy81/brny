@@ -11,31 +11,30 @@ use App\Models\User;
 
 class OperationsController extends Controller
 {
-    protected \;
+    protected $service;
 
-    public function __construct(AdminDashboardService \)
+    public function __construct(AdminDashboardService $service)
     {
-        \->service = \;
+        $this->service = $service;
     }
 
-    public function index(AdminDashboardFilterRequest \)
+    public function index(AdminDashboardFilterRequest $request)
     {
-        \ = \->validated();
+        $filters = $request->validated();
         
-        if (empty(\['from'])) \['from'] = now()->subDays(30)->format('Y-m-d');
-        if (empty(\['to'])) \['to'] = now()->format('Y-m-d');
+        if (empty($filters['from'])) $filters['from'] = now()->subDays(30)->format('Y-m-d');
+        if (empty($filters['to'])) $filters['to'] = now()->format('Y-m-d');
 
-        \ = \->service->getRecentRegistrations(\);
-        \ = \->service->getRecentThefts(\);
-        \ = \->service->getDuplicates();
-        \ = \->service->getAgentPerformance(\);
+        $registrations = $this->service->getRecentRegistrations($filters);
+        $thefts = $this->service->getRecentThefts($filters);
+        $duplicates = $this->service->getDuplicates();
+        $agentPerformance = $this->service->getAgentPerformance($filters);
 
         // Data for filters
-        \ = VehicleBrand::orderBy('name')->get();
-        \ = Owner::distinct('commune')->whereNotNull('commune')->pluck('commune');
-        \ = User::where('role', 'agent')->orderBy('name')->get();
+        $brands = VehicleBrand::orderBy('name')->get();
+        $communes = Owner::distinct('commune')->whereNotNull('commune')->pluck('commune');
+        $agents = User::where('role', 'agent')->orderBy('name')->get();
 
         return view('admin.operations', compact('registrations', 'thefts', 'duplicates', 'agentPerformance', 'filters', 'brands', 'communes', 'agents'));
     }
 }
-

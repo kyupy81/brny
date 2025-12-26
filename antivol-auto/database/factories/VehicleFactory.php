@@ -13,10 +13,10 @@ class VehicleFactory extends Factory
 
     public function definition()
     {
-        // Get a random brand
-        $brand = VehicleBrand::inRandomOrder()->first();
-        // Get a model belonging to that brand
-        $model = VehicleModel::where('brand_id', $brand->id)->inRandomOrder()->first();
+        // Get a random brand or create one
+        $brand = VehicleBrand::inRandomOrder()->first() ?? VehicleBrand::factory()->create();
+        // Get a model belonging to that brand or create one
+        $model = VehicleModel::where('brand_id', $brand->id)->inRandomOrder()->first() ?? VehicleModel::factory()->create(['brand_id' => $brand->id]);
 
         return [
             'plate_number' => strtoupper($this->faker->bothify('RAB ### ?')),

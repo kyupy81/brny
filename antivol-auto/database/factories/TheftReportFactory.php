@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\TheftReport;
 use App\Models\User;
+use App\Models\Vehicle;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TheftReportFactory extends Factory
@@ -13,8 +14,8 @@ class TheftReportFactory extends Factory
     public function definition()
     {
         return [
-            'registration_id' => null, // Set in seeder
-            'reported_by' => User::where('role', 'agent')->inRandomOrder()->first()->id ?? null,
+            'vehicle_id' => Vehicle::factory(),
+            'reported_by' => User::factory(),
             'reported_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
             'location' => $this->faker->address(),
             'description' => $this->faker->sentence(),

@@ -6,31 +6,41 @@ use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\PhotoController;
 
 Route::prefix('v1')->group(function () {
-    // Public OTP endpoints for clients
-    Route::post('otp/request', [AuthController::class, 'requestOtp']);
-    Route::post('otp/verify', [AuthController::class, 'verifyOtp']);
+    // Public OTP endpoints pour clients (avec rate limiting)
+    Route::post('otp/request', [AuthController::class, 'requestOtp'])
+        ->middleware('throttle:5,1'); // Max 5 requêtes par minute
+    
+    Route::post('otp/verify', [AuthController::class, 'verifyOtp'])
+        ->middleware('throttle:10,1'); // Max 10 tentatives par minute
 
-    // Auth for agents/admin (email/password)
-    Route::post('auth/login', [AuthController::class, 'login']);
+    // Authentification agents/admin (email/password)
+    Route::post('auth/login', [AuthController::class, 'login'])
+        ->middleware('throttle:10,1');
 
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
-        // Registrations (dossier) - agent
+        // Enregistrements - agent
         Route::get('registrations', [RegistrationController::class, 'index']);
-        Route::post('registrations', [RegistrationController::class, 'store'])->middleware('role:agent');
+        Route::post('registrations', [RegistrationController::class, 'store'])
+            ->middleware('role:agent');
         Route::get('registrations/{registration}', [RegistrationController::class, 'show']);
-        Route::put('registrations/{registration}', [RegistrationController::class, 'update'])->middleware('role:agent');
-        // validation restricted to admin
-        Route::post('registrations/{registration}/validate', [RegistrationController::class, 'validateRegistration'])->middleware('role:admin');
+        Route::put('registrations/{registration}', [RegistrationController::class, 'update'])
+            ->middleware('role:agent');
+        
+        // Validation restreinte à admin
+        Route::post('registrations/{registration}/validate', [RegistrationController::class, 'validateRegistration'])
+            ->middleware('role:admin');
 
-        // Photos upload for registration
-        Route::post('registrations/{registration}/photos', [PhotoController::class, 'upload'])->middleware('role:agent');
+        // Upload de photos
+        Route::post('registrations/{registration}/photos', [PhotoController::class, 'upload'])
+            ->middleware('role:agent')
+            ->middleware('throttle:30,1'); // Max 30 uploads par minute
 
-        // Search endpoint
+        // Recherche
         Route::get('search', [RegistrationController::class, 'search']);
     });
 
-    // Public verification endpoint (QR token)
+    // Vérification publique (jeton QR)
     Route::get('verify/{token}', [RegistrationController::class, 'verifyToken']);
 });

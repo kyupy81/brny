@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
@@ -9,7 +9,7 @@ class Marking extends Model
 {
     use HasFactory;
 
-    protected  = [
+    protected $fillable = [
         'vehicle_id',
         'code',
         'qr_path',
@@ -19,17 +19,17 @@ class Marking extends Model
         'zone',
     ];
 
-    protected  = [
+    protected $casts = [
         'marked_at' => 'datetime',
     ];
 
     public function vehicle()
     {
-        return ->belongsTo(Vehicle::class);
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function agent()
     {
-        return ->belongsTo(User::class, 'agent_id');
+        return $this->belongsTo(User::class, 'agent_id');
     }
 }

@@ -1,4 +1,4 @@
-﻿import defaultTheme from 'tailwindcss/defaultTheme';
+import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
 
 /** @type {import('tailwindcss').Config} */
@@ -12,68 +12,64 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', 'Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                // Surfaces
-                bg: {
-                    background: '#0B0F14',
-                    surface: '#0F1620',
-                    elevated: '#141E2A',
+                neutral: {
+                    950: '#0B0F14',
+                    900: '#0F1620',
+                    850: '#141E2A',
+                    700: '#233041',
+                    650: '#1B2634',
+                    450: '#7B8898',
+                    300: '#A9B4C2',
+                    100: '#EAF0F7',
                 },
-                // Borders
-                border: {
-                    card: '#233041',
-                    divider: '#1B2634',
-                },
-                // Text
-                text: {
-                    primary: '#EAF0F7',
-                    secondary: '#A9B4C2',
-                    muted: '#7B8898',
-                },
-                // Accent
                 accent: {
-                    DEFAULT: '#4CC3FF',
-                    hover: '#2FB5FF',
+                    500: 'var(--accent)',
+                    600: 'var(--accent)',
+                    focusRing: 'rgba(76,195,255,0.25)',
+                    DEFAULT: 'var(--accent)',
+                    hover: 'var(--accent)',
                 },
-                // Status
-                success: '#39D98A',
-                warning: '#FFB020',
-                danger: '#FF5A6A',
-            },
-            backgroundColor: {
-                // Map bg colors for easier utility use
-                DEFAULT: 'var(--color-bg-background)',
-            },
-            textColor: {
-                // Map text colors
-                DEFAULT: 'var(--color-text-primary)',
-            },
-            borderColor: {
-                DEFAULT: 'var(--color-border-card)',
+                status: {
+                    success: '#39D98A',
+                    warning: '#FFB020',
+                    danger: '#FF5A6A',
+                },
+                bg: {
+                    background: 'var(--bg-primary)',
+                    surface: 'var(--bg-surface)',
+                    elevated: 'var(--bg-elevated)',
+                },
+                border: {
+                    default: 'var(--border-default)',
+                    divider: 'var(--border-default)',
+                    card: 'var(--border-default)',
+                },
+                text: {
+                    primary: 'var(--text-primary)',
+                    secondary: 'var(--text-secondary)',
+                    muted: 'var(--text-muted)',
+                    onStrong: '#0B0F14',
+                },
             },
             borderRadius: {
-                input: 'var(--radius-input)',
-                card: 'var(--radius-card)',
-                pill: 'var(--radius-pill)',
-            },
-            spacing: {
-                1: 'var(--space-4)',
-                2: 'var(--space-8)',
-                3: 'var(--space-12)',
-                4: 'var(--space-16)',
-                6: 'var(--space-24)',
-                8: 'var(--space-32)',
+                input: '12px',
+                card: '16px',
+                pill: '999px',
             },
             boxShadow: {
-                sm: 'var(--shadow-sm)',
-                md: 'var(--shadow-md)',
-                lg: 'var(--shadow-lg)',
-                DEFAULT: 'var(--shadow-md)',
+                sm: '0 8px 18px 0 rgba(0, 0, 0, 0.25)',
+                md: '0 12px 26px 0 rgba(0, 0, 0, 0.30)',
+                lg: '0 12px 30px 0 rgba(0, 0, 0, 0.35)',
             },
-            ringColor: {
-                DEFAULT: 'rgba(76, 195, 255, 0.25)',
+            fontSize: {
+                'h1': ['32px', { lineHeight: '40px', letterSpacing: '-0.2px', fontWeight: '800' }],
+                'h2': ['20px', { lineHeight: '28px', letterSpacing: '-0.1px', fontWeight: '700' }],
+                'h3': ['16px', { lineHeight: '24px', letterSpacing: '0px', fontWeight: '700' }],
+                'body': ['16px', { lineHeight: '24px', letterSpacing: '0px', fontWeight: '500' }],
+                'caption': ['12px', { lineHeight: '16px', letterSpacing: '0.6px', fontWeight: '600' }],
             },
         },
     },

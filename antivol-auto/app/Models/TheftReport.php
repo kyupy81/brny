@@ -9,15 +9,15 @@ class TheftReport extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['registration_id', 'reported_by', 'reported_at', 'location', 'description', 'status'];
+    protected $fillable = ['vehicle_id', 'reported_by', 'reported_at', 'location', 'description', 'status'];
 
     protected $casts = [
         'reported_at' => 'datetime',
     ];
 
-    public function registration()
+    public function vehicle()
     {
-        return $this->belongsTo(Registration::class);
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function reporter()
@@ -25,3 +25,4 @@ class TheftReport extends Model
         return $this->belongsTo(User::class, 'reported_by');
     }
 }
+

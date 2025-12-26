@@ -1,8 +1,10 @@
-﻿<?php
+<?php
 
 namespace App\Services;
 
 use App\Models\Marking;
+use App\Models\Vehicle;
+use App\Models\User;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -11,40 +13,58 @@ class MarkingService
 {
     public function generateCode(): string
     {
-         = date('Y');
-         = Marking::whereYear('created_at', )->latest()->first();
+        $year = date('Y');
+        $lastMarking = Marking::whereYear('created_at', $year)->latest()->first();
         
-         = 1;
-        if () {
+        $sequence = 1;
+        if ($lastMarking) {
             // Extract sequence from AVA-YYYY-XXXXXX
-             = explode('-', ->code);
-            if (count() === 3) {
-                 = intval([2]) + 1;
+            $parts = explode('-', $lastMarking->code);
+            if (count($parts) === 3) {
+                $sequence = intval($parts[2]) + 1;
             }
         }
 
-        return sprintf('AVA-%s-%06d', , );
+        return sprintf('AVA-%s-%06d', $year, $sequence);
     }
 
-    public function generateQrCode(string , string ): string
+    public function generateQrCode(string $code, string $plate): string
     {
         // Content to encode
-         = json_encode([
-            'code' => ,
-            'plate' => ,
-            'url' => route('verify.public', ['token' => base64_encode()]) // Example URL
+        $content = json_encode([
+            'code' => $code,
+            'plate' => $plate,
+            'url' => route('verify.public', ['token' => base64_encode($code)]) // Example URL
         ]);
 
-         = 'qrcodes/' .  . '.png';
+        $path = 'qrcodes/' . $code . '.png';
         
         // Generate QR Code
-         = QrCode::format('png')
+        $image = QrCode::format('png')
                        ->size(300)
                        ->errorCorrection('H')
-                       ->generate();
+                       ->generate($content);
 
-        Storage::disk('public')->put(, );
+        Storage::disk('public')->put($path, $image);
 
-        return ;
+        return $path;
+    }
+
+    public function generateMarking(Vehicle $vehicle, User $agent): Marking
+    {
+        $code = $this->generateCode();
+        $qrPath = $this->generateQrCode($code, $vehicle->plate_number);
+
+        $marking = Marking::create([
+            'vehicle_id' => $vehicle->id,
+            'code' => $code,
+            'qr_path' => $qrPath,
+            'marking_type' => 'standard', // Default type
+            'marked_at' => now(),
+            'agent_id' => $agent->id,
+            'zone' => 'Abidjan', // Default or dynamic
+        ]);
+
+        return $marking;
     }
 }

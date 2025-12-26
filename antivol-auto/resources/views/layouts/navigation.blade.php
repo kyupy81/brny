@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-bg-surface border-b border-border-divider">
+<nav x-data="{ open: false }" class="bg-bg-surface border-b border-border-default">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -18,12 +18,38 @@
                     <x-nav-link :href="route('thefts.index')" :active="request()->routeIs('thefts.*')">
                         {{ __('Vols Signalés') }}
                     </x-nav-link>
-                    @auth
+                                        @auth
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
                         </x-nav-link>
+                        
+                        @if(auth()->user()->hasAnyRole(['super_admin', 'admin']))
+                            <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.index')">
+                                {{ __('Utilisateurs') }}
+                            </x-nav-link>
+                        @endif
                     @endauth
                 </div>
+            </div>
+
+                        <!-- Theme Toggle -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6" x-data="{ theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') }">
+                <button
+                    @click="
+                        theme = theme === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', theme);
+                        localStorage.setItem('theme', theme);
+                    "
+                    class="p-2 rounded-md text-text-secondary hover:text-text-primary focus:outline-none transition duration-150 ease-in-out"
+                    title="Mode sombre / clair"
+                >
+                    <svg x-show="theme === 'dark'" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg x-show="theme === 'light'" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display: none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
             </div>
 
             <!-- Settings Dropdown -->
@@ -43,7 +69,7 @@
                         </x-slot>
 
                         <x-slot name="content">
-                            <x-dropdown-link :href="route('profile.edit')">
+                            <x-dropdown-link :href="route('agent.profile.edit')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
@@ -96,7 +122,7 @@
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-border-divider">
+        <div class="pt-4 pb-1 border-t border-border-default">
             @auth
                 <div class="px-4">
                     <div class="font-medium text-base text-text-primary">{{ Auth::user()->name }}</div>
@@ -104,7 +130,7 @@
                 </div>
 
                 <div class="mt-3 space-y-1">
-                    <x-responsive-nav-link :href="route('profile.edit')">
+                    <x-responsive-nav-link :href="route('agent.profile.edit')">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
 
@@ -132,3 +158,10 @@
         </div>
     </div>
 </nav>
+
+
+
+
+
+
+

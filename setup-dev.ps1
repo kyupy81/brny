@@ -1,4 +1,4 @@
-<#
+﻿<#
   setup-dev.ps1
   Script PowerShell pour initialiser le projet Laravel en local (Windows / Laragon)
 
@@ -366,7 +366,7 @@ if ($DryRun -or $SummaryOnly) {
     if ($RunFactoryData) { $PlannedSteps += 'Seed factory bulk data (FactoryDataSeeder) (flag -RunFactoryData)' }
     if (-not $SkipNpm) { $PlannedSteps += 'NPM install and build assets (npm install && npm run dev) (if npm available)' }
 
-    $title = ($SummaryOnly) ? 'SummaryOnly: plan (will exit after displaying)' : 'Dry-Run Summary: planned steps'
+    $title = if ($SummaryOnly) { 'SummaryOnly: plan (will exit after displaying)' } else { 'Dry-Run Summary: planned steps' }
     Write-Host "`n== $title ==" -ForegroundColor Yellow
     Write-Log $title
     for ($i = 0; $i -lt $PlannedSteps.Count; $i++) {
@@ -573,3 +573,5 @@ Write-Host "\n== Setup terminé. Vérifiez les logs ci‑dessous pour d'éventue
 Write-Log 'Setup terminé'
 
 Pop-Location
+
+

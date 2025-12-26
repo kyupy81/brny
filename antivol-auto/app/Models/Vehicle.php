@@ -25,4 +25,9 @@ class Vehicle extends Model
     {
         return $this->hasMany(Registration::class);
     }
+
+    public function theftReports()
+    {
+        return $this->hasMany(TheftReport::class);
+    }
 }

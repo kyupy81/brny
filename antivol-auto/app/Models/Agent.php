@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
@@ -9,10 +9,10 @@ class Agent extends Model
 {
     use HasFactory;
 
-    protected  = ['user_id', 'matricule', 'zone'];
+    protected $fillable = ['user_id', 'matricule', 'zone'];
 
     public function user()
     {
-        return ->belongsTo(User::class);
+        return $this->belongsTo(User::class);
     }
 }

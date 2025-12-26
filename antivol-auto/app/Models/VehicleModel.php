@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class VehicleModel extends Model
 {
-    protected $fillable = ['brand_id', 'name'];
+    use HasFactory;
+
+    protected $fillable = ['name', 'brand_id'];
 
     public function brand()
     {
-        return $this->belongsTo(VehicleBrand::class, 'brand_id');
+        return $this->belongsTo(VehicleBrand::class);
     }
 }

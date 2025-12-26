@@ -12,256 +12,204 @@ use Carbon\Carbon;
 
 class AdminDashboardService
 {
-    protected function applyFilters(\, \, \ = 'created_at')
+    protected function applyFilters($query, $filters, $dateColumn = 'created_at')
     {
-        if (!empty(\['from'])) {
-            \->whereDate(\, '>=', \['from']);
-        } else {
-            // Default to 30 days if not specified, unless 'ALL' is implied by empty
-            // But usually dashboard has a default range. Let's assume controller sets defaults if needed.
-            // Or we can set default here.
-            // \->whereDate(\, '>=', Carbon::now()->subDays(30));
+        if (!empty($filters['from'])) {
+            $query->whereDate($dateColumn, '>=', $filters['from']);
         }
 
-        if (!empty(\['to'])) {
-            \->whereDate(\, '<=', \['to']);
+        if (!empty($filters['to'])) {
+            $query->whereDate($dateColumn, '<=', $filters['to']);
         }
 
-        if (!empty(\['commune'])) {
-            \->whereHas('owner', function (\) use (\) {
-                \->where('commune', \['commune']);
+        if (!empty($filters['commune'])) {
+            $query->whereHas('owner', function ($q) use ($filters) {
+                $q->where('commune', $filters['commune']);
             });
         }
 
-        if (!empty(\['brand_id'])) {
-            \->whereHas('vehicle', function (\) use (\) {
-                \->where('brand_id', \['brand_id']);
+        if (!empty($filters['brand_id'])) {
+            $query->whereHas('vehicle', function ($q) use ($filters) {
+                $q->where('brand_id', $filters['brand_id']);
             });
         }
 
-        if (!empty(\['model_id'])) {
-            \->whereHas('vehicle', function (\) use (\) {
-                \->where('model_id', \['model_id']);
+        if (!empty($filters['model_id'])) {
+            $query->whereHas('vehicle', function ($q) use ($filters) {
+                $q->where('model_id', $filters['model_id']);
             });
         }
 
-        if (!empty(\['year'])) {
-            \->whereHas('vehicle', function (\) use (\) {
-                \->where('manufacture_year', \['year']);
+        if (!empty($filters['year'])) {
+            $query->whereHas('vehicle', function ($q) use ($filters) {
+                $q->where('manufacture_year', $filters['year']);
             });
         }
-
-        if (!empty(\['status']) && \['status'] !== 'ALL') {
-            \->where('status', \['status']);
+        
+        if (!empty($filters['agent_id'])) {
+            $query->where('created_by', $filters['agent_id']);
         }
 
-        if (!empty(\['agent_id'])) {
-            \->where('created_by', \['agent_id']);
-        }
-
-        return \;
+        return $query;
     }
 
-    public function getKPIs(\)
+    protected function applyTheftFilters($query, $filters)
     {
-        // Base queries
-        \ = Registration::query();
-        \->applyFilters(\, \, 'created_at');
-
-        \ = TheftReport::query();
-        // Apply filters to theft reports. Note: TheftReport doesn't have direct owner/vehicle/agent relations usually,
-        // but it belongs to Registration. So we filter via registration.
-        \->whereHas('registration', function (\) use (\) {
-            \->applyFilters(\, \, 'created_at'); // Filter by registration creation or theft report date?
-            // Usually filters apply to the main entity. If filtering by date, for thefts it should be reported_at.
-            // But other filters (commune, brand) apply to the related registration.
-        });
-        
-        // Date filter for theft reports specifically
-        if (!empty(\['from'])) {
-            \->whereDate('reported_at', '>=', \['from']);
-        }
-        if (!empty(\['to'])) {
-            \->whereDate('reported_at', '<=', \['to']);
+        if (!empty($filters['from'])) {
+            $query->whereDate('reported_at', '>=', $filters['from']);
         }
 
-        \ = \->count();
-        \ = \->distinct('owner_id')->count('owner_id');
+        if (!empty($filters['to'])) {
+            $query->whereDate('reported_at', '<=', $filters['to']);
+        }
+
+        if (!empty($filters['commune'])) {
+            $query->whereHas('vehicle.registrations.owner', function ($q) use ($filters) {
+                $q->where('commune', $filters['commune']);
+            });
+        }
+
+        if (!empty($filters['brand_id'])) {
+            $query->whereHas('vehicle', function ($q) use ($filters) {
+                $q->where('brand_id', $filters['brand_id']);
+            });
+        }
+
+        if (!empty($filters['model_id'])) {
+            $query->whereHas('vehicle', function ($q) use ($filters) {
+                $q->where('model_id', $filters['model_id']);
+            });
+        }
+
+        if (!empty($filters['year'])) {
+            $query->whereHas('vehicle', function ($q) use ($filters) {
+                $q->where('manufacture_year', $filters['year']);
+            });
+        }
         
-        // For status counts, we can't reuse \ if it has status filter applied.
-        // So we create a new query with all filters EXCEPT status.
-        \ = Registration::query();
-        \ = \;
-        unset(\['status']);
-        \->applyFilters(\, \, 'created_at');
-        
-        \ = (clone \)->where('status', 'ACTIVE')->count();
-        \ = (clone \)->where('status', 'PENDING')->count();
-        \ = (clone \)->where('status', 'STOLEN')->count();
+        if (!empty($filters['agent_id'])) {
+             $query->whereHas('vehicle.registrations', function ($q) use ($filters) {
+                $q->where('created_by', $filters['agent_id']);
+            });
+        }
 
-        // Theft rate
-        \ = \ > 0 ? round((\ / \) * 100, 2) : 0;
+        return $query;
+    }
 
-        // Top Commune
-        \ = Registration::query()
-            ->join('owners', 'registrations.owner_id', '=', 'owners.id')
-            ->select('owners.commune', DB::raw('count(*) as total'))
-            ->groupBy('owners.commune')
-            ->orderByDesc('total')
-            ->first();
+    public function getKPIs($filters)
+    {
+        // 1. Total Registrations
+        $registrationsQuery = Registration::query();
+        $this->applyFilters($registrationsQuery, $filters);
+        $totalRegistrations = $registrationsQuery->count();
 
-        // Top Brand
-        \ = Registration::query()
-            ->join('vehicles', 'registrations.vehicle_id', '=', 'vehicles.id')
-            ->join('vehicle_brands', 'vehicles.brand_id', '=', 'vehicle_brands.id')
-            ->select('vehicle_brands.name', DB::raw('count(*) as total'))
-            ->groupBy('vehicle_brands.name')
-            ->orderByDesc('total')
-            ->first();
+        // 2. Total Thefts
+        $theftsQuery = TheftReport::query();
+        $this->applyTheftFilters($theftsQuery, $filters);
+        $totalThefts = $theftsQuery->count();
+
+        // 3. Recovery Rate
+        $resolvedThefts = (clone $theftsQuery)->where('status', 'RESOLVED')->count();
+        $recoveryRate = $totalThefts > 0 ? round(($resolvedThefts / $totalThefts) * 100, 1) : 0;
+
+        // 4. Active Agents
+        $activeAgents = Registration::query();
+        $this->applyFilters($activeAgents, $filters);
+        $activeAgentsCount = $activeAgents->distinct('created_by')->count('created_by');
 
         return [
-            'total_registrations' => \,
-            'unique_owners' => \,
-            'active_count' => \,
-            'pending_count' => \,
-            'stolen_count' => \,
-            'theft_rate' => \,
-            'top_commune' => \ ? \->commune : 'N/A',
-            'top_brand' => \ ? \->name : 'N/A',
+            'total_registrations' => $totalRegistrations,
+            'total_thefts' => $totalThefts,
+            'recovery_rate' => $recoveryRate,
+            'active_agents' => $activeAgentsCount
         ];
     }
 
-    public function getCharts(\)
+    public function getCharts($filters)
     {
-        // 1. Registrations per day
-        \ = Registration::query();
-        \->applyFilters(\, \, 'created_at');
-        \ = \->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
+        // 1. Registrations over time
+        $registrationsQuery = Registration::query();
+        $this->applyFilters($registrationsQuery, $filters);
+        
+        $registrationsByDate = $registrationsQuery
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        // 2. Thefts per day
-        \ = TheftReport::query();
-        if (!empty(\['from'])) \->whereDate('reported_at', '>=', \['from']);
-        if (!empty(\['to'])) \->whereDate('reported_at', '<=', \['to']);
-        // Apply other filters via registration relation
-        \->whereHas('registration', function(\) use (\) {
-             \ = \;
-             unset(\['from'], \['to']);
-             \->applyFilters(\, \);
-        });
+        // 2. Thefts over time
+        $theftsQuery = TheftReport::query();
+        $this->applyTheftFilters($theftsQuery, $filters);
         
-        \ = \->select(DB::raw('DATE(reported_at) as date'), DB::raw('count(*) as total'))
+        $theftsByDate = $theftsQuery
+            ->select(DB::raw('DATE(reported_at) as date'), DB::raw('count(*) as count'))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        // 3. Top Communes
-        \ = Registration::query()
-            ->join('owners', 'registrations.owner_id', '=', 'owners.id')
-            ->select('owners.commune', DB::raw('count(*) as total'))
-            ->groupBy('owners.commune')
-            ->orderByDesc('total')
-            ->limit(10)
-            ->get();
-
-        // 4. Top Brands
-        \ = Registration::query()
+        // 3. Top Brands
+        $brandsQuery = Registration::query();
+        $this->applyFilters($brandsQuery, $filters);
+        $topBrands = $brandsQuery
             ->join('vehicles', 'registrations.vehicle_id', '=', 'vehicles.id')
             ->join('vehicle_brands', 'vehicles.brand_id', '=', 'vehicle_brands.id')
-            ->select('vehicle_brands.name', DB::raw('count(*) as total'))
+            ->select('vehicle_brands.name', DB::raw('count(*) as count'))
             ->groupBy('vehicle_brands.name')
-            ->orderByDesc('total')
-            ->limit(10)
-            ->get();
-
-        // 5. Status Distribution
-        \ = Registration::query();
-        \ = \;
-        unset(\['status']);
-        \->applyFilters(\, \, 'created_at');
-        \ = \->select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
+            ->orderByDesc('count')
+            ->limit(5)
             ->get();
 
         return [
-            'registrations_trend' => \,
-            'thefts_trend' => \,
-            'top_communes' => \,
-            'top_brands' => \,
-            'status_distribution' => \,
+            'registrations_trend' => [
+                'labels' => $registrationsByDate->pluck('date'),
+                'data' => $registrationsByDate->pluck('count')
+            ],
+            'thefts_trend' => [
+                'labels' => $theftsByDate->pluck('date'),
+                'data' => $theftsByDate->pluck('count')
+            ],
+            'top_brands' => [
+                'labels' => $topBrands->pluck('name'),
+                'data' => $topBrands->pluck('count')
+            ]
         ];
     }
 
-    public function getRecentRegistrations(\, \ = 50)
+    public function getRecentRegistrations($filters, $limit = 10)
     {
-        \ = Registration::with(['owner', 'vehicle.brand', 'vehicle.model', 'creator']);
-        \->applyFilters(\, \, 'created_at');
-        return \->latest()->paginate(\);
+        $query = Registration::with(['vehicle.brand', 'vehicle.model', 'owner', 'creator']);
+        $this->applyFilters($query, $filters);
+        return $query->latest()->limit($limit)->get();
     }
 
-    public function getRecentThefts(\, \ = 50)
+    public function getRecentThefts($filters, $limit = 10)
     {
-        \ = TheftReport::with(['registration.vehicle', 'registration.owner']);
-        
-        if (!empty(\['from'])) \->whereDate('reported_at', '>=', \['from']);
-        if (!empty(\['to'])) \->whereDate('reported_at', '<=', \['to']);
-        
-        \->whereHas('registration', function(\) use (\) {
-             \ = \;
-             unset(\['from'], \['to']);
-             \->applyFilters(\, \);
-        });
+        $query = TheftReport::with(['vehicle.brand', 'vehicle.model']);
+        $this->applyTheftFilters($query, $filters);
 
-        return \->latest('reported_at')->paginate(\);
+        return $query->latest('reported_at')->limit($limit)->get();
     }
 
     public function getDuplicates()
     {
-        // Logic to find duplicates
-        // 1. Duplicate Plates (Active)
-        \ = DB::table('vehicles')
-            ->join('registrations', 'vehicles.id', '=', 'registrations.vehicle_id')
-            ->where('registrations.status', 'ACTIVE')
-            ->select('vehicles.plate_number', DB::raw('count(*) as count'))
-            ->groupBy('vehicles.plate_number')
+        // Find vehicles with same VIN or Plate Number (excluding the original)
+        // This is a simplified check. Real duplicate detection might be more complex.
+        return Vehicle::select('plate_number', DB::raw('count(*) as count'))
+            ->groupBy('plate_number')
             ->having('count', '>', 1)
             ->get();
-
-        // 2. Duplicate Mirror Codes
-        \ = DB::table('vehicles')
-            ->whereNotNull('mirror_engraving_code')
-            ->select('mirror_engraving_code', DB::raw('count(*) as count'))
-            ->groupBy('mirror_engraving_code')
-            ->having('count', '>', 1)
-            ->get();
-
-        return [
-            'plates' => \,
-            'mirrors' => \,
-        ];
     }
 
-    public function getAgentPerformance(\)
+    public function getAgentPerformance($filters)
     {
-        \ = User::where('role', 'agent')
-            ->withCount(['registrations' => function(\) use (\) {
-                if (!empty(\['from'])) \->whereDate('created_at', '>=', \['from']);
-                if (!empty(\['to'])) \->whereDate('created_at', '<=', \['to']);
-            }])
-            ->withCount(['registrations as stolen_count' => function(\) use (\) {
-                \->where('status', 'STOLEN');
-                if (!empty(\['from'])) \->whereDate('created_at', '>=', \['from']);
-                if (!empty(\['to'])) \->whereDate('created_at', '<=', \['to']);
-            }]);
-            
-        return \->get()->map(function(\) {
-            \->theft_rate = \->registrations_count > 0 
-                ? round((\->stolen_count / \->registrations_count) * 100, 1) 
-                : 0;
-            return \;
-        });
+        $query = Registration::query();
+        $this->applyFilters($query, $filters);
+        
+        return $query->select('created_by', DB::raw('count(*) as total_registrations'))
+            ->with('creator')
+            ->groupBy('created_by')
+            ->orderByDesc('total_registrations')
+            ->limit(10)
+            ->get();
     }
 }
-

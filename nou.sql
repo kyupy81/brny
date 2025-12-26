@@ -1,0 +1,10 @@
+SET FOREIGN_KEY_CHECKS=0;
+DROP TABLE IF EXISTS role_user;
+DROP TABLE IF EXISTS permission_user;
+DROP TABLE IF EXISTS role_permission;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS permissions;
+DROP TABLE IF EXISTS model_has_permissions;
+DROP TABLE IF EXISTS model_has_roles;
+DROP TABLE IF EXISTS role_has_permissions;
+SET FOREIGN_KEY_CHECKS=1;

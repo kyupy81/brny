@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <form action="{{ route('thefts.store') }}" method="POST" class="space-y-6">
+    <form action="{{ route('theft-reports.store') }}" method="POST" class="space-y-6">
         @csrf
 
         <div class="border-2 border-black p-6">

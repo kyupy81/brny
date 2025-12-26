@@ -24,7 +24,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('current_owner_id')->references('id')->on('owners')->onDelete('set null');
-            $table->foreign('active_registration_id')->references('id')->on('registrations')->onDelete('set null');
         });
     }
 

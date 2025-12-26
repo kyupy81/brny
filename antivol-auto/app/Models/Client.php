@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
@@ -9,15 +9,15 @@ class Client extends Model
 {
     use HasFactory;
 
-    protected  = ['user_id', 'address', 'id_type', 'id_number'];
+    protected $fillable = ['user_id', 'address', 'id_type', 'id_number'];
 
     public function user()
     {
-        return ->belongsTo(User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function vehicles()
     {
-        return ->hasMany(Vehicle::class);
+        return $this->hasMany(Vehicle::class);
     }
 }
