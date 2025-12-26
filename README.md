@@ -66,5 +66,25 @@ Accessible inputs:
 - Skeletons: subtle shimmer for KPIs/lists; empty states with CTA
 - PWA: offline banner + sync indicator (UI only)
 
+## Liens du projet
+
+### 🔗 Dépôt GitHub
+- **Repository:** [https://github.com/kyupy81/brny](https://github.com/kyupy81/brny)
+- **Issues:** [https://github.com/kyupy81/brny/issues](https://github.com/kyupy81/brny/issues)
+
+### 📚 Documentation API
+- **Documentation complète:** [docs/api-documentation.md](docs/api-documentation.md)
+- **Endpoints disponibles:**
+  - Authentification (OTP, Login/Logout)
+  - Gestion des dossiers (CRUD)
+  - Téléchargement de photos
+  - Recherche de véhicules
+  - Vérification publique (QR Code)
+
+### 📖 Documentation supplémentaire
+- [Guide d'intégration](docs/integration-guide.md) - Intégration des composants Agent/Admin
+- [Exemples de composants](docs/component-examples.md) - Composants Blade réutilisables
+- [Utilisation des tokens](docs/design-tokens-usage.md) - Guide des design tokens
+
 ## Next
 If you want, I can add a Style Dictionary JSON for Figma import, Tailwind config mapping, or scaffold component examples (buttons, cards, badges, inputs) using these tokens.

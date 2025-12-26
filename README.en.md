@@ -63,6 +63,26 @@ To print the planned steps without executing them:
 ```
 
 
+## Project Links
+
+### 🔗 GitHub Repository
+- **Repository:** [https://github.com/kyupy81/brny](https://github.com/kyupy81/brny)
+- **Issues:** [https://github.com/kyupy81/brny/issues](https://github.com/kyupy81/brny/issues)
+
+### 📚 API Documentation
+- **Complete documentation:** [docs/api-documentation.md](docs/api-documentation.md)
+- **Available endpoints:**
+  - Authentication (OTP, Login/Logout)
+  - Registration management (CRUD)
+  - Photo uploads
+  - Vehicle search
+  - Public verification (QR Code)
+
+### 📖 Additional Documentation
+- [Integration Guide](docs/integration-guide.md) - Agent/Admin component integration
+- [Component Examples](docs/component-examples.md) - Reusable Blade components
+- [Token Usage](docs/design-tokens-usage.md) - Design tokens guide
+
 ## Help
 To display the built-in help:
 ```powershell
